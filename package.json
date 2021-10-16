@@ -8,6 +8,7 @@
     "build": "webpack",
     "prestart": "npm run build",
     "start": "pm2 start index.js --name hbfl -f",
+    "watch": "pm2 start index.js --name hbfl --watch -f",
     "stop": "pm2 stop hbfl",
     "deploy": "node deploy.js"
   },
@@ -25,6 +26,7 @@
     "@hapi/inert": "6.0.4",
     "archiver": "5.3.0",
     "array-shuffle": "3.0.0",
+    "aws-sdk": "^2.1006.0",
     "bcryptjs": "2.4.3",
     "bluebird": "3.7.2",
     "cli-spinner": "0.2.10",
@@ -71,6 +73,7 @@
     "svg-inline-loader": "0.8.2",
     "terser-webpack-plugin": "5.2.4",
     "webpack": "5.53.0",
-    "webpack-cli": "4.8.0"
+    "webpack-cli": "4.8.0",
+    "webpack-dev-server": "^4.3.1"
   }
 }

@@ -1,10 +1,10 @@
 const AWS = require('aws-sdk')
 const helpers = require('./helpers')
 
-AWS.config.update({ region: '/* TODO: add your region */' })
+AWS.config.update({ region: 'us-east-1' })
 
 // Declare local variables
-// TODO: Create an autoscaling object
+const autoScaling = new AWS.AutoScaling()
 
 const lcName = 'hamsterLC'
 const roleName = 'hamsterLCRole'
@@ -16,5 +16,24 @@ helpers.createIamRole(roleName)
 .then(data => console.log(data))
 
 function createLaunchConfiguration (lcName, profileArn) {
-  // TODO: Create a launch configuration
+  const params = {
+    IamInstanceProfile: profileArn,
+    ImageId: 'ami-03688afa4c83b1a3a',
+    InstanceType: 't2.micro',
+    LaunchConfigurationName: lcName,
+    KeyName: keyName,
+    SecurityGroups: [
+      sgName
+    ],
+    UserData: 'IyEvYmluL2Jhc2gKY3VybCAtLXNpbGVudCAtLWxvY2F0aW9uIGh0dHBzOi8vcnBtLm5vZGVzb3VyY2UuY29tL3NldHVwXzE2LnggfCBzdWRvIGJhc2ggLQpzdWRvIHl1bSBpbnN0YWxsIC15IG5vZGVqcyBnaXQKZ2l0IGNsb25lIGh0dHBzOi8vZ2l0aHViLmNvbS9yeWFubXVyYWthbWkvaGJmbC5naXQgL2hvbWUvZWMyLXVzZXIvaGJmbApjZCAvaG9tZS9lYzItdXNlci9oYmZsCnN1ZG8gbnBtIGkKbnBtIHJ1biBzdGFydA=='
+  }
+
+  return new Promise((resolve, reject) => {
+    autoScaling.createLaunchConfiguration(params, (err, data) => {
+      if (err) {
+        console.log('The data was:', data)
+        reject(err)
+      } else resolve(data)
+    })
+  })
 }

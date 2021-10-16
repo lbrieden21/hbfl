@@ -70,7 +70,7 @@ function getRaceData () {
   return Promise.resolve(raceData)
 }
 
-function createSecurityGroup (sgName, port) {
+function createSecurityGroup (sgName, port, linkToSgName = null) {
   return new Promise((resolve, reject) => {
     const ec2 = new AWS.EC2()
     const params = {
@@ -81,8 +81,9 @@ function createSecurityGroup (sgName, port) {
     ec2.createSecurityGroup(params, (err, data) => {
       if (err) reject(err)
       else {
+        const newSgId = data.GroupId
         const params = {
-          GroupId: data.GroupId,
+          GroupId: newSgId,
           IpPermissions: [
             {
               IpProtocol: 'tcp',
@@ -90,7 +91,7 @@ function createSecurityGroup (sgName, port) {
               ToPort: port,
               IpRanges: [
                 {
-                  CidrIp: '0.0.0.0/0'
+                  CidrIp: '72.182.3.87/32'
                 }
               ]
             }
@@ -98,8 +99,57 @@ function createSecurityGroup (sgName, port) {
         }
         ec2.authorizeSecurityGroupIngress(params, (err) => {
           if (err) reject(err)
-          else resolve(data.GroupId)
+          else {
+            if (linkToSgName) {
+              getSecurityGroupId(linkToSgName)
+              .then((linkToSgId) => {
+                const params = {
+                  GroupId: newSgId,
+                  IpPermissions: [
+                    {
+                      IpProtocol: '-1',
+                      UserIdGroupPairs: [
+                        {
+                          GroupId: linkToSgId,
+                        }
+                      ]
+                    }
+                  ]
+                }
+                // Attach the linkTo security group to the new security group just created
+                ec2.authorizeSecurityGroupIngress(params, (err, data) => {
+                  if (err) reject(err)
+                  else resolve(newSgId)
+                })
+              })
+            }
+            resolve(newSgId)
+          }
         })
+      }
+    })
+  })
+}
+
+function getSecurityGroupId (sgName) {
+  const params = {
+    Filters: [
+      {
+        Name: 'group-name',
+        Values:[
+          sgName
+        ]
+      }
+    ]
+  }
+
+  return new Promise((resolve, reject) => {
+    const ec2 = new AWS.EC2()
+    ec2.describeSecurityGroups(params, (err, data) => {
+      if (err) reject(err)
+      else {
+        const [ securityGroup ] = data.SecurityGroups
+        resolve(securityGroup.GroupId)
       }
     })
   })

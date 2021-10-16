@@ -1,5 +1,8 @@
 const AWS = require('aws-sdk')
 
+// Declare local variables
+const ec2SgName = 'hamster_sg'
+
 function createSecurityGroup (sgName, port) {
   return new Promise((resolve, reject) => {
     const ec2 = new AWS.EC2()
@@ -11,8 +14,9 @@ function createSecurityGroup (sgName, port) {
     ec2.createSecurityGroup(params, (err, data) => {
       if (err) reject(err)
       else {
+        const newSgId = data.GroupId
         const params = {
-          GroupId: data.GroupId,
+          GroupId: newSgId,
           IpPermissions: [
             {
               IpProtocol: 'tcp',
@@ -20,16 +24,63 @@ function createSecurityGroup (sgName, port) {
               ToPort: port,
               IpRanges: [
                 {
-                  CidrIp: '0.0.0.0/0'
+                  CidrIp: '72.182.3.87/32'
                 }
               ]
             }
           ]
         }
-        ec2.authorizeSecurityGroupIngress(params, (err) => {
+        ec2.authorizeSecurityGroupIngress(params, (err, data) => {
           if (err) reject(err)
-          else resolve(data.GroupId)
+          else {
+            getSecurityGroupId(ec2SgName)
+            .then((ec2SgId) => {
+              const params = {
+                GroupId: ec2SgId,
+                IpPermissions: [
+                  {
+                    IpProtocol: '-1',
+                    UserIdGroupPairs: [
+                      {
+                        GroupId: newSgId,
+                      }
+                    ]
+                  }
+                ]
+              }
+              // Attach the new security group just created to the ec2 hamster sg
+              ec2.authorizeSecurityGroupIngress(params, (err, data) => {
+                if (err) reject(err)
+                // return the GroupId of the newly created security group above
+                else resolve(newSgId)
+              })
+            })
+          }
         })
+      }
+    })
+  })
+}
+
+function getSecurityGroupId (sgName) {
+  const params = {
+    Filters: [
+      {
+        Name: 'group-name',
+        Values:[
+          sgName
+        ]
+      }
+    ]
+  }
+
+  return new Promise((resolve, reject) => {
+    const ec2 = new AWS.EC2()
+    ec2.describeSecurityGroups(params, (err, data) => {
+      if (err) reject(err)
+      else {
+        const [ securityGroup ] = data.SecurityGroups
+        resolve(securityGroup.GroupId)
       }
     })
   })
@@ -48,7 +99,11 @@ function createIamRole (roleName) {
       if (err) reject(err)
       else {
         const params = {
-          PolicyArn: 'arn:aws:iam::aws:policy/AdministratorAccess',
+          // PolicyArn: 'arn:aws:iam::aws:policy/AdministratorAccess',
+          // TODO: NEED TO WORK OUT ATTACHING ALL THESE POLICIES, BELOW CODE WON'T WORK WITH MULTIPILES
+          PolicyArn: 'arn:aws:iam::aws:policy/AmazonS3FullAccess',
+          PolicyArn: 'arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess',
+          PolicyArn: 'arn:aws:iam::aws:policy/AmazonRDSFullAccess',
           RoleName: roleName
         }
 
@@ -80,5 +135,6 @@ function createIamRole (roleName) {
 
 module.exports = {
   createIamRole,
+  getSecurityGroupId,
   createSecurityGroup
 }

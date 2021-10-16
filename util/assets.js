@@ -1,4 +1,4 @@
-const base = '/public'
+const base = 'https://hamster-bucket-todo-add-a-unique-identifier.s3.amazonaws.com/public'
 module.exports = {
   hamster1: base + '/images/hamster-1-final.png',
   hamster2: base + '/images/hamster-2-final.png',
