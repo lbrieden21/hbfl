@@ -104,6 +104,7 @@ function createIamRole (roleName) {
           PolicyArn: 'arn:aws:iam::aws:policy/AmazonS3FullAccess',
           PolicyArn: 'arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess',
           PolicyArn: 'arn:aws:iam::aws:policy/AmazonRDSFullAccess',
+          PolicyArn: 'arn:aws:iam::aws:policy/AmazonElastiCacheFullAccess',
           RoleName: roleName
         }
 
