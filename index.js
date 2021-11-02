@@ -63,22 +63,16 @@ const init = async () => {
 
   // initialize database and start server
   // usersInit()
-  // Commented out until SQS is configured
   // .then(() => queueInit())
-  // .then(async () => {
-  //   try {
-  //     await server.start()
-  //     console.log(`Server started at http://localhost:${server.info.port}`)
-  //   } catch (err) {
-  //     console.error(`Server could not start. Error: ${err}`)
-  //   }
-  // })
-  try {
-    await server.start()
-    console.log(`Server started at http://localhost:${server.info.port}`)
-  } catch (err) {
-    console.error(`Server could not start. Error: ${err}`)
-  }
+  queueInit()
+  .then(async () => {
+    try {
+      await server.start()
+      console.log(`Server started at http://localhost:${server.info.port}`)
+    } catch (err) {
+      console.error(`Server could not start. Error: ${err}`)
+    }
+  })
 }
 
 init()
