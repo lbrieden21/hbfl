@@ -1,7 +1,7 @@
 // Imports
 const AWS = require('aws-sdk')
 
-AWS.config.update({ region: '/* TODO: Add your region */' })
+AWS.config.update({ region: 'us-east-1' })
 
 // Declare local variables
 const cw = new AWS.CloudWatch()
@@ -14,9 +14,34 @@ createCloudWatchAlarm(alarmName, topicArn, tg, lb)
 .then(data => console.log(data))
 
 function createCloudWatchAlarm (alarmName, topicArn, tg, lb) {
-  // TODO: Create params const object
+  const params = {
+    AlarmName: alarmName,
+    ComparisonOperatior: 'LessThanThreshold',
+    EvaluationPeriods: 1,
+    MetricName: 'HealthyHostCount',
+    Namespace: 'AWS/ApplicationELB',
+    Period: 60,
+    Threshold: 1,
+    AlarmActions: [
+      topicArn
+    ],
+    Dimesions: [
+      {
+        Name: 'TargetGroup',
+        Value: tg
+      }, {
+        Name: 'LoadBalancer',
+        Value: lb
+      }
+    ],
+    Statistics: 'Average',
+    TreatMissingData: 'breaching'
+  }
 
   return new Promise((resolve, reject) => {
-    // TODO: Call putMetricAlarm
+    cw.putMetricAlarm(params, (err, data) => {
+      if (err) reject(err)
+      else resolve(data)
+    })
   })
 }
